@@ -3,8 +3,30 @@
 
 #include "object_manager.h"
 
+//#define USE_TYPE_A
+#ifdef USE_TYPE_A
+
 /*
- * CES SYSTEM IMPLEMENTATION
+ * CES SYSTEM IMPLEMENTATION "A"
+ *
+ * In type A:
+ * Systems are separate, they only contain logic, no data. They are wrapped around by a system-manager.
+ * Entities are stored in an entity-manager.
+ * Each entity contains a vector of components, and an ID that identifies the entity.
+ * Systems ask the entity-manager for entities to process each time update is called on them by the system-manager.
+ * Note that entities and components don't store their ID directly, they are rather just identified by systems and other objects by it.
+ *
+ * System Manager
+ *   -Systems
+ *     -type-id
+ *
+ * Entity manager
+ *   -Entites
+ *     -ID
+ *     -Components
+ *       -ID
+ *       -type-id
+ *       -data
  */
 
 using namespace std;
@@ -19,7 +41,7 @@ namespace component
   class base
   {
   public:
-    om::id_type id;
+    om::id_type id; //type id, assigned by a system
   };
 
   class pos : public base
@@ -44,7 +66,7 @@ namespace entity
 {
   class base
   {
-    om::object_manager< component::base* > components;
+    om::object_manager< component::base* > components; //collection of components
   public:
     om::id_type add(component::base* c)
     {
@@ -66,11 +88,19 @@ namespace entity
     {
       return components;
     }
+
+    void shutdown()
+    {
+      for( auto c = components.begin(); c != components.end(); ++c )
+      {
+        delete c->second;
+      }
+    }
   };
 
   class manager
   {
-    om::object_manager< base > entities;
+    om::object_manager< base > entities; //collection of entities
   private:
   protected:
     manager(){} //singleton
@@ -97,6 +127,14 @@ namespace entity
     {
       return entities;
     }
+    
+    void shutdown()
+    {
+      for( auto c = entities.begin(); c != entities.end(); ++c )
+      {
+        c->second.shutdown();
+      }
+    }
 
     static manager& get()
     {
@@ -121,7 +159,7 @@ namespace system
     virtual om::id_type get_typeid(){return om::id_type();}
   };
 
-  class pos : public base
+  class pos : public base //there is a system for each component type
   {
     static om::id_type typ()
     {
@@ -132,22 +170,22 @@ namespace system
     static component::pos* create()
     {
       component::pos* c = new component::pos;
-      c->id = typ();
+      c->id = typ(); //add type information to a component
       return c;
     }
 
     void update()
     {
-      for( auto c = ces::entity::manager::get().get_data().begin();
+      for( auto c = ces::entity::manager::get().get_data().begin(); //go through all entities
            c != ces::entity::manager::get().get_data().end(); ++c )
       {
-        for( auto d = c->second.get_data().begin();
+        for( auto d = c->second.get_data().begin(); //go through all components
              d != c->second.get_data().end(); ++d )
         {
-          if(d->second->id == typ())
+          if(d->second->id == typ()) //if the type is the same
           {
-            component::pos* p = static_cast<component::pos*>(d->second);
-            cout << p->x << " " << p->y << " " << p->z << endl;
+            component::pos* p = static_cast<component::pos*>(d->second); //then cast the component to the right type
+            cout << p->x << " " << p->y << " " << p->z << endl; //and perform something on them
           }
         }
       }
@@ -197,9 +235,11 @@ namespace system
     }
   };
 
+  //this is needed so that we can neatly just call tell this manager to update/init etc., 
+  //no need to know about the systems
   class manager
   {
-    list< base* > systems;
+    list< base* > systems; 
   private:
   protected:
     manager(){} //singleton
@@ -275,6 +315,10 @@ int main()
   ces::system::manager::get().update();
   ces::system::manager::get().shutdown();
 
+  ces::entity::manager::get().shutdown();
+
 	cin.get();
 	return 0;
 }
+
+#endif

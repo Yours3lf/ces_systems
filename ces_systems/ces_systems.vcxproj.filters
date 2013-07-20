@@ -23,5 +23,8 @@
     <ClCompile Include="..\type_a.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\type_b.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
