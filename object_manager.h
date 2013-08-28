@@ -3,6 +3,23 @@
 
 #include <vector>
 
+template< class t >
+static void writeout_bits( t id )
+{
+  using namespace std;
+  om::id_type siz = sizeof( t ) * 8;
+  om::id_type one = 1;
+
+  cout << id << ": ";
+
+  for( om::id_type c = 0; c < siz; ++c )
+  {
+    cout << ( id & ( one << ( siz - 1 - c ) ) ? 1 : 0 );
+  }
+
+  cout << endl;
+}
+
 namespace om
 {
 
@@ -35,22 +52,6 @@ struct index
 	index( id_type i = INDEX_MASK, inner_id_type n = INDEX_MASK, inner_id_type ix = INDEX_MASK ) :
 		id( i ), idx( ix ), next( n ) {}
 };
-
-static void writeout_bits( om::id_type id )
-{
-  using namespace std;
-  om::id_type siz = sizeof( id ) * 8;
-  om::id_type one = 1;
-
-  cout << id << ": ";
-
-  for( om::id_type c = 0; c < siz; ++c )
-  {
-    cout << bool( id & ( one << ( siz - 1 - c ) ) );
-  }
-
-  cout << endl;
-}
 
 template< class t >
 class object_manager

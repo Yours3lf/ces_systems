@@ -64,6 +64,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\ces_callback.h" />
     <ClInclude Include="..\object_manager.h" />
   </ItemGroup>
   <ItemGroup>

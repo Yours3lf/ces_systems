@@ -18,6 +18,9 @@
     <ClInclude Include="..\object_manager.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\ces_callback.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\type_a.cpp">

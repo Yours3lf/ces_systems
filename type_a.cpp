@@ -2,8 +2,9 @@
 #include <list>
 
 #include "object_manager.h"
+#include "ces_callback.h"
 
-//#define USE_TYPE_A
+#define USE_TYPE_A
 #ifdef USE_TYPE_A
 
 /*
@@ -30,6 +31,11 @@
  */
 
 using namespace std;
+
+enum
+{
+  EVENT_TYPE_ONE, EVENT_TYPE_TWO
+};
 
 /*
  * Components only contain data, no logic (only constructors/destructors maybe)
@@ -174,6 +180,20 @@ namespace system
       return c;
     }
 
+    void init()
+    {
+      callback_manager::get().add_callback( [&]( callback_pack d )
+      {
+        if( d.type == EVENT_TYPE_TWO )
+        {
+          std::cout << "Event two: " << d.cbd.data << std::endl;
+          return true;
+        }
+
+        return false;
+      } );
+    }
+
     void update()
     {
       for( auto c = ces::entity::manager::get().get_data().begin(); //go through all entities
@@ -186,6 +206,13 @@ namespace system
           {
             component::pos* p = static_cast<component::pos*>(d->second); //then cast the component to the right type
             cout << p->x << " " << p->y << " " << p->z << endl; //and perform something on them
+
+            //send an event
+            callback_pack cbp;
+            cbp.type = EVENT_TYPE_ONE;
+            cbp.cbd.v4[0] = p->x;
+            cbp.cbd.v4[1] = p->y;
+            callback_manager::get().add_event( cbp );
           }
         }
       }
@@ -212,6 +239,20 @@ namespace system
       return c;
     }
 
+    void init()
+    {
+      callback_manager::get().add_callback( [&]( callback_pack d )
+      {
+        if( d.type == EVENT_TYPE_ONE )
+        {
+          std::cout << "Event one: " << d.cbd.v4[0] << " " << d.cbd.v4[1] << std::endl;
+          return true;
+        }
+
+        return false;
+      } );
+    }
+
     void update()
     {
       for( auto c = ces::entity::manager::get().get_data().begin();
@@ -224,6 +265,12 @@ namespace system
           {
             component::name* p = static_cast<component::name*>(d->second);
             cout << p->str.c_str() << endl;
+
+            //send an event
+            callback_pack cbp;
+            cbp.type = EVENT_TYPE_TWO;
+            memcpy( cbp.cbd.data, p->str.c_str(), p->str.size() + 1 );
+            callback_manager::get().add_event( cbp );
           }
         }
       }
@@ -313,9 +360,12 @@ int main()
 
   ces::system::manager::get().init();
   ces::system::manager::get().update();
+  ces::callback_manager::get().dispatch_callbacks();
   ces::system::manager::get().shutdown();
 
   ces::entity::manager::get().shutdown();
+
+  writeout_bits(entity_with_pos);
 
 	cin.get();
 	return 0;
